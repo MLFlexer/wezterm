@@ -17,6 +17,7 @@ use parking_lot::{
 };
 use percent_encoding::percent_decode_str;
 use portable_pty::{CommandBuilder, ExitStatus, PtySize};
+use session_state_saver::MuxSessionState;
 use std::collections::{HashMap, HashSet};
 use std::convert::TryInto;
 use std::io::{Read, Write};
@@ -46,6 +47,7 @@ pub mod tmux;
 pub mod tmux_commands;
 mod tmux_pty;
 pub mod window;
+mod session_state_saver;
 
 use crate::activity::Activity;
 
@@ -1381,6 +1383,14 @@ impl Mux {
         }
 
         Ok((tab, pane, window_id))
+    }
+
+    pub fn get_session_state(&self) -> anyhow::Result<MuxSessionState> {
+
+        Ok(MuxSessionState {
+            windows: self.windows.read().values().map(|window| window.get_session_state().expect("Could not get session state of window")).collect(),
+        })
+
     }
 }
 

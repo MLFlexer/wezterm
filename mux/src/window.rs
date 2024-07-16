@@ -1,4 +1,5 @@
 use crate::pane::CloseReason;
+use crate::session_state_saver::WindowSessionState;
 use crate::{Mux, MuxNotification, Tab, TabId};
 use config::GuiPosition;
 use std::sync::Arc;
@@ -264,5 +265,15 @@ impl Window {
         if invalidated {
             self.invalidate();
         }
+    }
+
+    pub fn get_session_state(&self) -> anyhow::Result<WindowSessionState> {
+        Ok(WindowSessionState {
+            tabs: self.tabs.iter().enumerate().map(|(i, tab)| tab.get_session_state(i, self.id, &self.workspace).expect("Could not get session state from tab")).collect(),
+            size: self.tabs.first().expect("Window contains no tabs").get_size(),
+            workspace: self.workspace.clone(),
+            title: self.title.clone(),
+
+        })
     }
 }

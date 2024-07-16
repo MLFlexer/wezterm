@@ -1,6 +1,7 @@
 use crate::domain::DomainId;
 use crate::pane::*;
 use crate::renderable::StableCursorPosition;
+use crate::session_state_saver::TabSessionState;
 use crate::{Mux, MuxNotification, WindowId};
 use bintree::PathBranch;
 use config::configuration;
@@ -751,6 +752,27 @@ impl Tab {
     pub fn get_zoomed_pane(&self) -> Option<Arc<dyn Pane>> {
         self.inner.lock().get_zoomed_pane()
     }
+
+    pub fn get_session_state(&self, tab_id: TabId, window_id: WindowId, workspace: &str) -> anyhow::Result<TabSessionState> {
+        let inner = self.inner.lock();
+        match &inner.pane {
+            Some(tree) => 
+                Ok(TabSessionState{ 
+                    pane: pane_tree(&tree, 
+                              tab_id,
+                              window_id,
+                              self.get_active_pane().as_ref(),
+                              self.get_zoomed_pane().as_ref(), 
+                              workspace, 
+                              0, 
+                              0), 
+                title: inner.title.clone()}),
+            None => anyhow::bail!("No pane exits in tab")
+
+
+        }
+    }
+
 }
 
 impl TabInner {
